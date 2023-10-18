@@ -232,27 +232,15 @@ class INode:
 
     @cached_property
     def atime(self) -> datetime:
-        return ts.from_unix_ns(self.atime_ns)
-
-    @cached_property
-    def atime_ns(self) -> int:
-        return self.inode.atime * 1_000_000_000
+        return ts.from_unix(self.inode.atime)
 
     @cached_property
     def mtime(self) -> datetime:
-        return ts.from_unix_ns(self.mtime_ns)
-
-    @cached_property
-    def mtime_ns(self) -> int:
-        return self.inode.mtime * 1_000_000_000
+        return ts.from_unix(self.inode.mtime)
 
     @cached_property
     def ctime(self) -> datetime:
-        return ts.from_unix_ns(self.ctime_ns)
-
-    @cached_property
-    def ctime_ns(self) -> int:
-        return self.inode.ctime * 1_000_000_000
+        return ts.from_unix(self.inode.ctime)
 
     @cached_property
     def uid(self) -> int:
