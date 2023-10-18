@@ -67,7 +67,6 @@ class JFFS2:
             if not part:
                 continue
 
-            # Traverse to the target path from our root node
             for name, entry in node.iterdir():
                 if name == part:
                     node = entry

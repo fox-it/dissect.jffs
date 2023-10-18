@@ -1,6 +1,6 @@
 # dissect.jffs
 
-A Dissect module implementing a parser for the JFFS2 file system. For more
+A Dissect module implementing a parser for the JFFS2 file system, commonly used by router operating systems. For more
 information, please see [the documentation](https://docs.dissect.tools/en/latest/projects/dissect.jffs/index.html).
 
 ## Requirements
@@ -47,7 +47,7 @@ refer to [the development guide](https://docs.dissect.tools/en/latest/contributi
 
 ## Copyright and license
 
-Dissect JFFS parser is developed and released as open source by the Joint Sigint Cyber Unit (<https://github.com/JSCU-NL>)
+`dissect.jffs` is developed and released as open source by the Joint Sigint Cyber Unit (<https://github.com/JSCU-NL>)
 in collaboration with Fox-IT (<https://www.fox-it.com>) part of NCC Group Plc (<https://www.nccgroup.com>).
 
 License terms: AGPL3 (<https://www.gnu.org/licenses/agpl-3.0.html>). For more information, see the LICENSE file.
