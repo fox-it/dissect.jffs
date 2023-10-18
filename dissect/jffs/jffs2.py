@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import logging
 import stat
 import zlib
@@ -22,6 +23,7 @@ from dissect.jffs.exceptions import (
 )
 
 log = logging.getLogger(__name__)
+log.setLevel(os.getenv("DISSECT_LOG_JFFS", "CRITICAL"))
 
 
 class JFFS2:
