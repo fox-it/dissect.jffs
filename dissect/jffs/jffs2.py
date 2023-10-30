@@ -65,14 +65,16 @@ class JFFS2:
         parts = path.split("/")
         node = node or self.root
 
-        for part in parts:
+        for part_num, part in enumerate(parts):
             if not part:
                 continue
 
-            for name, entry in node.iterdir():
-                if name == part:
-                    node = entry
-                    break
+            for dirent_children in self._dirents.values():
+                if dirent := dirent_children.get(part.encode()):
+                    if dirent[-1].parent_inum == node.inum:
+                        node = self.inode(dirent[-1].inum)
+                        # TODO: symlinks
+                        break
             else:
                 raise FileNotFoundError(f"File not found: {path}")
 
@@ -148,13 +150,13 @@ class JFFS2:
             ),
         )
         self._dirents[self.root.inum][trash_dirent.entry.name] = [trash_dirent]
+        self._dirents[None] = {}
 
         # Add all orphaned files to the lost+found folder
-        self._dirents[None] = {}
         for dirents in self._lost_found:
             dirent = sorted(dirents, key=attrgetter("version"))[-1]
             dirent.name = f"{dirent.name}_ino_{dirent.inum}_pino_{dirent.parent_inum}_ver_{dirent.version}"
-
+            dirent.parent_inum = None
             self._dirents[None][dirent.name.encode()] = dirents
 
 
@@ -265,6 +267,11 @@ class INode:
             raise NotASymlinkError(f"{self!r} is not a symlink")
 
         return self.open().read().decode(errors="surrogateescape")
+
+    @cached_property
+    def link_inode(self):
+        link = self.link
+        return self.fs.get(self.link, self.parent if link.startswith("/") else None)
 
     def listdir(self) -> dict:
         return {name: node for name, node in self.iterdir()}

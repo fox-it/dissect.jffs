@@ -66,7 +66,7 @@ def test_jffs2_deleted_file(jffs2_zlib: BinaryIO) -> None:
     assert list(lost_found.listdir().keys()) == ["fox-banner.png_ino_3_pino_1_ver_1"]
 
     deleted_file = fs.get("/lost+found/fox-banner.png_ino_3_pino_1_ver_1")
-    assert deleted_file.parent.inum is None
+    assert deleted_file.parent is None
 
     with deleted_file.open() as fh:
         data = fh.read()
