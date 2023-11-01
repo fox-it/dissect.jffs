@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import os
 import logging
+import os
 import stat
 import zlib
 from bisect import bisect_right
@@ -62,19 +62,18 @@ class JFFS2:
         if isinstance(path, int):
             return self.inode(path)
 
-        parts = path.split("/")
+        parts = path.encode().split(b"/")
         node = node or self.root
 
-        for part_num, part in enumerate(parts):
+        for part in parts:
             if not part:
                 continue
 
-            for dirent_children in self._dirents.values():
-                if dirent := dirent_children.get(part.encode()):
-                    if dirent[-1].parent_inum == node.inum:
-                        node = self.inode(dirent[-1].inum)
-                        # TODO: symlinks
-                        break
+            while node.type == stat.S_IFLNK:
+                node = node.link_inode
+
+            if dirent := self._dirents[node.inum].get(part):
+                node = self.inode(dirent[-1].inum)
             else:
                 raise FileNotFoundError(f"File not found: {path}")
 
