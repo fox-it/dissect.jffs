@@ -88,3 +88,15 @@ def test_jffs2_first_ctf_2023(jffs2_router: BinaryIO) -> None:
 
     assert len(data) == 45469
     assert hashlib.sha1(data).hexdigest() == "669b00be651d29e618befddbfecf9f9ee82b93f9"
+
+
+def test_jffs2_out_of_order_versions(jffs2_zlib: BinaryIO) -> None:
+    old_dirent = """
+    851901e03000000078be3efa010000000100000004000000b3be1665080a0000
+    61748c85eecaede66c696e6b2e747874
+    """
+    data = jffs2_zlib.read() + bytes.fromhex(old_dirent)
+
+    fs = JFFS2(BytesIO(data))
+    assert fs._dirents[1][b"link.txt"][0].version == 1
+    assert fs._dirents[1][b"link.txt"][1].version == 2

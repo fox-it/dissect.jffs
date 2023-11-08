@@ -4,7 +4,7 @@ import logging
 import os
 import stat
 import zlib
-from bisect import bisect_right
+from bisect import bisect_right, insort_right
 from datetime import datetime
 from functools import cache, cached_property, lru_cache
 from operator import attrgetter
@@ -110,7 +110,8 @@ class JFFS2:
                     orphaned = self._dirents[dirent.pino].pop(dirent.name)
                     self._lost_found.append(orphaned)
                 else:
-                    self._dirents.setdefault(dirent.pino, {}).setdefault(dirent.name, []).append(DirEntry(self, dirent))
+                    dirents = self._dirents.setdefault(dirent.pino, {}).setdefault(dirent.name, [])
+                    insort_right(dirents, DirEntry(self, dirent), key=attrgetter("version"))
 
                 totlen = dirent.totlen
 
@@ -118,7 +119,8 @@ class JFFS2:
                 self.fh.seek(pos)
                 inode = c_jffs2.jffs2_raw_inode(self.fh)
 
-                self._inodes.setdefault(inode.ino, []).append((inode, pos + len(c_jffs2.jffs2_raw_inode)))
+                inodes = self._inodes.setdefault(inode.ino, [])
+                insort_right(inodes, (inode, pos + len(c_jffs2.jffs2_raw_inode)), key=lambda x: x[0].version)
 
                 totlen = inode.totlen
 
@@ -153,7 +155,7 @@ class JFFS2:
 
         # Add all orphaned files to the lost+found folder
         for dirents in self._lost_found:
-            dirent = sorted(dirents, key=attrgetter("version"))[-1]
+            dirent = dirents[-1]
             dirent.name = f"{dirent.name}_ino_{dirent.inum}_pino_{dirent.parent_inum}_ver_{dirent.version}"
             dirent.parent_inum = None
             self._dirents[None][dirent.name.encode()] = dirents
@@ -280,7 +282,7 @@ class INode:
             raise NotADirectoryError(f"{self!r} is not a directory")
 
         for dirents in self.fs._dirents.get(self.inum, {}).values():
-            dirent = sorted(dirents, key=attrgetter("version"))[-1]
+            dirent = dirents[-1]
             yield dirent.name, self.fs.inode(dirent.inum, dirent.type, parent=self)
 
     def open(self) -> RunlistStream:
