@@ -7,7 +7,6 @@ import zlib
 from bisect import bisect_right
 from datetime import datetime
 from functools import cache, cached_property, lru_cache
-from operator import attrgetter
 from typing import BinaryIO, Iterator, Optional, Union
 
 from dissect.util import ts
