@@ -4,7 +4,7 @@ import logging
 import os
 import stat
 import zlib
-from bisect import bisect_right, insort_right
+from bisect import bisect_right
 from datetime import datetime
 from functools import cache, cached_property, lru_cache
 from operator import attrgetter
@@ -111,7 +111,13 @@ class JFFS2:
                     self._lost_found.append(orphaned)
                 else:
                     dirents = self._dirents.setdefault(dirent.pino, {}).setdefault(dirent.name, [])
-                    insort_right(dirents, DirEntry(self, dirent), key=attrgetter("version"))
+                    entry = DirEntry(self, dirent)
+
+                    # Only assure that the last entry is sorted correctly
+                    if dirents and dirents[-1].version < entry.version:
+                        dirents.append(entry)
+                    else:
+                        dirents.insert(0, entry)
 
                 totlen = dirent.totlen
 
@@ -120,7 +126,13 @@ class JFFS2:
                 inode = c_jffs2.jffs2_raw_inode(self.fh)
 
                 inodes = self._inodes.setdefault(inode.ino, [])
-                insort_right(inodes, (inode, pos + len(c_jffs2.jffs2_raw_inode)), key=lambda x: x[0].version)
+                entry = (inode, pos + len(c_jffs2.jffs2_raw_inode))
+
+                # Only assure that the last entry is sorted correctly
+                if inodes and inodes[-1][0].version < inode.version:
+                    inodes.append(entry)
+                else:
+                    inodes.insert(0, entry)
 
                 totlen = inode.totlen
 
