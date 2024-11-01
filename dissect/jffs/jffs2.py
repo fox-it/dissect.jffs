@@ -224,7 +224,7 @@ class INode:
 
         inodes = self.fs._inodes.get(self.inum)
         if not inodes:
-            return ValueError(f"INode with inum {self.inum} does not exist")
+            raise ValueError(f"INode with inum {self.inum} does not exist")
 
         return inodes
 
