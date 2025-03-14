@@ -48,7 +48,8 @@ class JFFS2:
         # Dict of pino to dict of dirent names to list of dirents
         self._dirents: dict[int, dict[bytes, list[DirEntry]]] = {}
         self._lost_found: list[list[DirEntry]] = []
-        self._nlinksByInum: dict[int, int] = {}  # Map from nlinks to inum
+        # Map of nlinks by inum
+        self._nlinks_by_inum: dict[int, int] = {}
 
         if (node := c_jffs2.jffs2_unknown_node(fh)).magic not in JFFS2_MAGIC_NUMBERS:
             raise Error(f"Unknown JFFS2 magic: {node.magic:#x}")
@@ -165,19 +166,19 @@ class JFFS2:
                 if last_version.type == c_jffs2.DT_DIR:
                     # Root dir (inum == 1) gets three nlinks
                     # (see https://github.com/torvalds/linux/blob/6485cf5ea253d40d507cd71253c9568c5470cd27/fs/jffs2/fs.c#L311)
-                    self._nlinksByInum[last_version.inum] = 3 if last_version.inum == 1 else 2
+                    self._nlinks_by_inum[last_version.inum] = 3 if last_version.inum == 1 else 2
 
                     # Now update the parent entry, which might not have an associated nlink yet.
                     # The parent directory gets one nlink for each child directory.
                     base_nlinks = 3 if last_version.parent_inum == 1 else 2
-                    self._nlinksByInum[last_version.parent_inum] = (
-                        self._nlinksByInum.get(last_version.parent_inum, base_nlinks) + 1
+                    self._nlinks_by_inum[last_version.parent_inum] = (
+                        self._nlinks_by_inum.get(last_version.parent_inum, base_nlinks) + 1
                     )
 
                 elif last_version.type == c_jffs2.DT_REG:
-                    self._nlinksByInum[last_version.inum] = self._nlinksByInum.get(last_version.inum, 0) + 1
+                    self._nlinks_by_inum[last_version.inum] = self._nlinks_by_inum.get(last_version.inum, 0) + 1
                 elif last_version.type == c_jffs2.DT_LNK:
-                    self._nlinksByInum[last_version.inum] = 1
+                    self._nlinks_by_inum[last_version.inum] = 1
 
     def _garbage_collect(self) -> None:
         """Collect all found orphaned files and put them in the lost+found folder."""
@@ -301,7 +302,7 @@ class INode:
 
     @cached_property
     def nlink(self) -> int:
-        return self.fs._nlinksByInum.get(self.inum, 0)
+        return self.fs._nlinks_by_inum.get(self.inum, 0)
 
     def is_dir(self) -> bool:
         return self.type == stat.S_IFDIR
