@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "dissect.jffs"
 description = "A Dissect module implementing a parser for the JFFS2 file system, commonly used by router operating systems"
 readme = "README.md"
-requires-python = "~=3.9"
+requires-python = ">=3.10"
 license.text = "Affero General Public License v3"
 authors = [
   {name = "JSCU-NL", email = "121175071+JSCU-CNI@users.noreply.github.com"},
